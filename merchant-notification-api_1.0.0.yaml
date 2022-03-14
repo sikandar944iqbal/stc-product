@@ -1,0 +1,145 @@
+swagger: "2.0"
+info:
+  title: Merchant Notification API
+  x-ibm-name: merchant-notification-api
+  version: 1.0.0
+  description: ' Notification API'
+host: $(catalog.host)
+schemes:
+- https
+basePath: /
+produces:
+- application/json
+consumes:
+- application/json
+security:
+- clientID: []
+  clientSecret: []
+securityDefinitions:
+  clientID:
+    type: apiKey
+    name: X-IBM-Client-Id
+    in: header
+    x-key-type: client_id
+  clientSecret:
+    type: apiKey
+    name: x-ibm-client-secret
+    in: header
+    x-key-type: client_secret
+x-ibm-configuration:
+  gateway: datapower-api-gateway
+  type: rest
+  phase: realized
+  enforced: true
+  testable: true
+  cors:
+    enabled: true
+  assembly:
+    execute:
+    - gatewayscript:
+        version: 2.0.0
+        title: gatewayscript
+        source: context.message.header.set('x-user-metadata',context.get('oauth.verified_access_token.misc_info'));
+    - invoke:
+        title: invoke
+        version: 2.0.0
+        verb: keep
+        target-url: $(target-url)$(request.path)
+        follow-redirects: false
+        timeout: 120
+        parameter-control:
+          type: blacklist
+        header-control:
+          type: blacklist
+          values:
+          - ^X-IBM-Client-Id$
+        inject-proxy-headers: true
+  properties:
+    target-url:
+      value: http://account-management-microservice.m11s:3000
+      description: The URL of the target service
+      encoded: false
+  activity-log:
+    success-content: payload
+    error-content: payload
+    enabled: true
+  application-authentication:
+    certificate: false
+  buffering: true
+  catalogs: {}
+tags:
+- name: Notification
+definitions:
+  notifcation:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: true
+      responseCode:
+        type: string
+        example: T01
+      responseMessage_en:
+        type: string
+        example: The transaction was completed successfully.
+      responseMessage_ur:
+        type: string
+        example: The transaction was completed successfully.
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/notificationObject'
+  notificationObject:
+    type: object
+    properties:
+      merchantId:
+        type: integer
+        format: number
+        example: 800
+      merchantRequestId:
+        type: integer
+        format: number
+        example: 818
+      msisdns:
+        type: string
+        example: "03001234567"
+      status:
+        type: string
+        example: "03001234567"
+      Message:
+        type: string
+        example: "03001234567"
+      discripantvalues:
+        type: array
+        items:
+          $ref: '#/definitions/discripantvaluesObject'
+  discripantvaluesObject:
+    type: object
+    properties:
+      field:
+        type: string
+        example: "5"
+      reason:
+        type: string
+        example: Marked Discrepant
+paths:
+  /rest/api/merchant/v1/onboarding/notification:
+    post:
+      tags:
+      - Notification
+      summary: This API is for User Insert
+      description: ""
+      produces:
+      - application/json
+      consumes:
+      - multipart/form-data
+      parameters:
+      - name: body
+        in: body
+        required: false
+        description: Post body for bill payment companies
+        schema:
+          $ref: '#/definitions/notifcation'
+      responses:
+        "200":
+          description: successful request
