@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   title: Merchant Notification API
   x-ibm-name: merchant-notification-api
-  version: 1.0.1
+  version: 1.0.2
   description: ' Notification API'
 host: $(catalog.host)
 schemes:
